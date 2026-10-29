@@ -1,5 +1,14 @@
 # Mailchimp MCP Server
 
+> **This fork (philwinkle/mailchimp-mcp)** extends the upstream [AgentX-ai/mailchimp-mcp](https://github.com/AgentX-ai/mailchimp-mcp) server with **campaign report tools**: `get_campaign_clicks`, `get_campaign_opens`, `get_campaign_unsubscribes`, `get_campaign_bounces`, `get_campaign_abuse_reports`, `get_campaign_forwards`, `get_campaign_outbound_activity`, `get_campaign_email_activity`, `get_campaign_subscriber_activity`, `get_campaign_content`. List endpoints are ordered and return the maximum page size. Everything is read-only against the Mailchimp Marketing API.
+>
+> **Install from this fork**
+> ```bash
+> git clone https://github.com/philwinkle/mailchimp-mcp && cd mailchimp-mcp && npm ci && npm run build
+> # then point your MCP client at: node /path/to/mailchimp-mcp/build/index.js  with  MAILCHIMP_API_KEY=<key>-<dc>
+> ```
+> A Claude Desktop bundle (`mailchimp-mcp.mcpb`) is built from `manifest.json` and attached to releases.
+
 [![npm version](https://img.shields.io/npm/v/@agentx-ai/mailchimp-mcp-server)](https://www.npmjs.com/package/@agentx-ai/mailchimp-mcp-server)
 
 [![Watch the Notion Tutorial video](https://img.shields.io/badge/Watch_on-YouTube-red?logo=youtube&style=for-the-badge)](https://youtu.be/YcUrRAnFp8Q)

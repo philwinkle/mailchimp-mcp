@@ -186,8 +186,29 @@ export class MailchimpService {
   }
 
   // Campaign Management
-  async listCampaigns(): Promise<{ campaigns: MailchimpCampaign[] }> {
-    return await this.makePaginatedRequest("/campaigns", "create_time", "DESC");
+  async listCampaigns(options?: {
+    count?: number;
+    offset?: number;
+    since_send_time?: string;
+    before_send_time?: string;
+    status?: string;
+  }): Promise<{ campaigns: MailchimpCampaign[]; total_items?: number }> {
+    const params = new URLSearchParams({
+      count: String(Math.min(options?.count ?? 20, 1000)),
+      offset: String(options?.offset ?? 0),
+      sort_field: "send_time",
+      sort_dir: "DESC",
+      // Only fetch the fields the tool returns — full campaign objects
+      // are ~10KB each and make large accounts time out
+      fields:
+        "total_items,campaigns.id,campaigns.type,campaigns.status,campaigns.create_time,campaigns.send_time,campaigns.emails_sent,campaigns.settings.title,campaigns.settings.subject_line",
+    });
+    if (options?.since_send_time)
+      params.set("since_send_time", options.since_send_time);
+    if (options?.before_send_time)
+      params.set("before_send_time", options.before_send_time);
+    if (options?.status) params.set("status", options.status);
+    return await this.makeRequest(`/campaigns?${params.toString()}`);
   }
 
   async getCampaign(campaignId: string): Promise<MailchimpCampaign> {
@@ -242,8 +263,25 @@ export class MailchimpService {
   }
 
   // Campaign Reports
-  async listCampaignReports(): Promise<{ reports: MailchimpCampaignReport[] }> {
-    return await this.makePaginatedRequest("/reports", "send_time", "DESC");
+  async listCampaignReports(options?: {
+    count?: number;
+    offset?: number;
+    since_send_time?: string;
+    before_send_time?: string;
+  }): Promise<{ reports: MailchimpCampaignReport[]; total_items?: number }> {
+    const params = new URLSearchParams({
+      count: String(Math.min(options?.count ?? 20, 1000)),
+      offset: String(options?.offset ?? 0),
+      // Only fetch summary fields — full report objects include hourly
+      // timeseries and make large accounts time out
+      fields:
+        "total_items,reports.id,reports.campaign_title,reports.subject_line,reports.type,reports.emails_sent,reports.send_time,reports.opens,reports.clicks,reports.bounces,reports.unsubscribed",
+    });
+    if (options?.since_send_time)
+      params.set("since_send_time", options.since_send_time);
+    if (options?.before_send_time)
+      params.set("before_send_time", options.before_send_time);
+    return await this.makeRequest(`/reports?${params.toString()}`);
   }
 
   async getCampaignReport(
@@ -517,42 +555,87 @@ export class MailchimpService {
 
   // Campaign Opens
   async getCampaignOpens(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/opens`);
+    return await this.makeRequest(
+      `/reports/${campaignId}/open-details?count=1000`
+    );
   }
 
   // Campaign Clicks
   async getCampaignClicks(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/click-details`);
+    return await this.makeRequest(
+      `/reports/${campaignId}/click-details?count=1000`
+    );
   }
 
   // Campaign Unsubscribes
   async getCampaignUnsubscribes(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/unsubscribed`);
+    return await this.makeRequest(
+      `/reports/${campaignId}/unsubscribed?count=1000`
+    );
   }
 
   // Campaign Bounces
   async getCampaignBounces(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/bounces`);
+    return await this.makeRequest(`/reports/${campaignId}/bounces?count=1000`);
   }
 
   // Campaign Abuse Reports
   async getCampaignAbuseReports(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/abuse-reports`);
+    return await this.makeRequest(
+      `/reports/${campaignId}/abuse-reports?count=1000`
+    );
   }
 
   // Campaign Forwards
   async getCampaignForwards(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/forwards`);
+    return await this.makeRequest(
+      `/reports/${campaignId}/forwards?count=1000`
+    );
   }
 
   // Campaign Outbound Activity
   async getCampaignOutboundActivity(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/outbound-activity`);
+    return await this.makeRequest(
+      `/reports/${campaignId}/outbound-activity?count=1000`
+    );
   }
 
   // Campaign Email Activity
+  // Auto-paginates to return the full subscriber activity dataset for a campaign,
+  // since Mailchimp paginates this endpoint at a maximum of 1000 records per page.
   async getCampaignEmailActivity(campaignId: string): Promise<any> {
-    return await this.makeRequest(`/reports/${campaignId}/email-activity`);
+    const pageSize = 1000;
+    let offset = 0;
+    const allEmails: any[] = [];
+    let firstPageMeta: any = {};
+
+    while (true) {
+      const page: any = await this.makeRequest(
+        `/reports/${campaignId}/email-activity?count=${pageSize}&offset=${offset}`
+      );
+
+      if (offset === 0) {
+        // Capture the top-level metadata from the first page so the combined
+        // response shape matches what callers expect from a single Mailchimp page.
+        const { emails, _links, ...rest } = page;
+        firstPageMeta = rest;
+      }
+
+      const pageEmails: any[] = page.emails || [];
+      allEmails.push(...pageEmails);
+
+      const totalItems: number = page.total_items ?? allEmails.length;
+      if (pageEmails.length === 0 || allEmails.length >= totalItems) {
+        break;
+      }
+      offset += pageSize;
+    }
+
+    return {
+      ...firstPageMeta,
+      emails: allEmails,
+      total_items: allEmails.length,
+    };
   }
 
   // Campaign Subscriber Activity

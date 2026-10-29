@@ -1,0 +1,44 @@
+{
+  "manifest_version": "0.2",
+  "name": "mailchimp-mcp",
+  "display_name": "Mailchimp MCP",
+  "version": "1.1.3",
+  "description": "MCP server for the Mailchimp Marketing API — campaigns, reports, lists, segments, automations, and more.",
+  "long_description": "Provides read access to Mailchimp campaigns, campaign reports (opens, clicks, bounces, unsubscribes), audience lists, segments, members, automations, templates, landing pages, and e-commerce data via the Model Context Protocol.",
+  "author": {
+    "name": "AgentX AI",
+    "url": "https://github.com/AgentX-ai/mailchimp-mcp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AgentX-ai/mailchimp-mcp"
+  },
+  "license": "MIT",
+  "keywords": ["mailchimp", "email", "marketing", "campaigns", "reports"],
+  "server": {
+    "type": "node",
+    "entry_point": "build/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/build/index.js"],
+      "env": {
+        "MAILCHIMP_API_KEY": "${user_config.mailchimp_api_key}"
+      }
+    }
+  },
+  "user_config": {
+    "mailchimp_api_key": {
+      "type": "string",
+      "title": "Mailchimp API Key",
+      "description": "Your Mailchimp API key including the data center suffix (e.g. ...-us16). Generate one at https://admin.mailchimp.com/account/api/",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}

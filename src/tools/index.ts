@@ -173,10 +173,34 @@ export const getToolDefinitions = (service: MailchimpService) => [
   // Campaign Management
   {
     name: "list_campaigns",
-    description: "List all campaigns in your Mailchimp account",
+    description:
+      "List campaigns in your Mailchimp account, most recently sent first. Returns 20 by default; use count/offset to page and since_send_time to limit to a date range.",
     inputSchema: {
       type: "object",
-      properties: {},
+      properties: {
+        count: {
+          type: "number",
+          description: "Number of campaigns to return (default 20, max 1000)",
+        },
+        offset: {
+          type: "number",
+          description: "Number of campaigns to skip, for pagination (default 0)",
+        },
+        since_send_time: {
+          type: "string",
+          description:
+            "Only return campaigns sent after this ISO 8601 time (e.g. 2026-06-01T00:00:00+00:00)",
+        },
+        before_send_time: {
+          type: "string",
+          description: "Only return campaigns sent before this ISO 8601 time",
+        },
+        status: {
+          type: "string",
+          description:
+            "Filter by status: save, paused, schedule, sending, or sent",
+        },
+      },
       required: [],
     },
   },
@@ -287,16 +311,191 @@ export const getToolDefinitions = (service: MailchimpService) => [
   // Campaign Reports
   {
     name: "list_campaign_reports",
-    description: "List all campaign reports",
+    description:
+      "List campaign reports (summary stats per sent campaign). Returns 20 by default; use count/offset to page and since_send_time to limit to a date range.",
     inputSchema: {
       type: "object",
-      properties: {},
+      properties: {
+        count: {
+          type: "number",
+          description: "Number of reports to return (default 20, max 1000)",
+        },
+        offset: {
+          type: "number",
+          description: "Number of reports to skip, for pagination (default 0)",
+        },
+        since_send_time: {
+          type: "string",
+          description:
+            "Only return reports for campaigns sent after this ISO 8601 time (e.g. 2026-06-01T00:00:00+00:00)",
+        },
+        before_send_time: {
+          type: "string",
+          description:
+            "Only return reports for campaigns sent before this ISO 8601 time",
+        },
+      },
       required: [],
     },
   },
   {
     name: "get_campaign_report",
     description: "Get detailed report for a specific campaign",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_clicks",
+    description:
+      "Get a list of links clicked in a specific campaign, with per-link click counts (from /reports/{campaign_id}/click-details)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_opens",
+    description:
+      "Get detailed information about subscribers who opened a campaign (from /reports/{campaign_id}/open-details)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_unsubscribes",
+    description:
+      "Get information about subscribers who unsubscribed from a specific campaign (from /reports/{campaign_id}/unsubscribed)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_bounces",
+    description:
+      "Get information about bounced messages for a specific campaign (from /reports/{campaign_id}/bounces)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_abuse_reports",
+    description:
+      "Get a list of abuse complaints for a specific campaign (from /reports/{campaign_id}/abuse-reports)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_forwards",
+    description:
+      "Get information about forwarded campaigns (from /reports/{campaign_id}/forwards)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_outbound_activity",
+    description:
+      "Get hourly outbound send activity for a specific campaign (from /reports/{campaign_id}/outbound-activity)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_email_activity",
+    description:
+      "Get a list of member's subscriber activity in a specific campaign (from /reports/{campaign_id}/email-activity)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "get_campaign_subscriber_activity",
+    description:
+      "Get a specific subscriber's activity in a specific campaign (from /reports/{campaign_id}/email-activity/{subscriber_hash})",
+    inputSchema: {
+      type: "object",
+      properties: {
+        campaign_id: {
+          type: "string",
+          description: "The campaign ID",
+        },
+        subscriber_hash: {
+          type: "string",
+          description:
+            "The MD5 hash of the lowercase version of the list member's email address",
+        },
+      },
+      required: ["campaign_id", "subscriber_hash"],
+    },
+  },
+  {
+    name: "get_campaign_content",
+    description:
+      "Get the HTML and plain-text content for a campaign (from /campaigns/{campaign_id}/content)",
     inputSchema: {
       type: "object",
       properties: {
@@ -721,19 +920,32 @@ export const handleToolCall = async (
 
     // Campaign Management
     case "list_campaigns":
-      const campaigns = await service.listCampaigns();
+      const campaigns = await service.listCampaigns({
+        count: args.count,
+        offset: args.offset,
+        since_send_time: args.since_send_time,
+        before_send_time: args.before_send_time,
+        status: args.status,
+      });
       return {
         content: [
           {
             type: "text",
             text: JSON.stringify(
-              campaigns.campaigns.map((c) => ({
-                id: c.id,
-                type: c.type,
-                status: c.status,
-                create_time: c.create_time,
-                send_time: c.send_time,
-              })),
+              {
+                total_items: campaigns.total_items,
+                returned: campaigns.campaigns.length,
+                campaigns: campaigns.campaigns.map((c: any) => ({
+                  id: c.id,
+                  type: c.type,
+                  status: c.status,
+                  title: c.settings?.title,
+                  subject_line: c.settings?.subject_line,
+                  emails_sent: c.emails_sent,
+                  create_time: c.create_time,
+                  send_time: c.send_time,
+                })),
+              },
               null,
               2
             ),
@@ -858,21 +1070,33 @@ export const handleToolCall = async (
 
     // Campaign Reports
     case "list_campaign_reports":
-      const campaignReports = await service.listCampaignReports();
+      const campaignReports = await service.listCampaignReports({
+        count: args.count,
+        offset: args.offset,
+        since_send_time: args.since_send_time,
+        before_send_time: args.before_send_time,
+      });
       return {
         content: [
           {
             type: "text",
             text: JSON.stringify(
-              campaignReports.reports.map((r) => ({
-                id: r.id,
-                campaign_title: r.campaign_title,
-                type: r.type,
-                emails_sent: r.emails_sent,
-                send_time: r.send_time,
-                opens: r.opens,
-                clicks: r.clicks,
-              })),
+              {
+                total_items: campaignReports.total_items,
+                returned: campaignReports.reports.length,
+                reports: campaignReports.reports.map((r: any) => ({
+                  id: r.id,
+                  campaign_title: r.campaign_title,
+                  subject_line: r.subject_line,
+                  type: r.type,
+                  emails_sent: r.emails_sent,
+                  send_time: r.send_time,
+                  opens: r.opens,
+                  clicks: r.clicks,
+                  bounces: r.bounces,
+                  unsubscribed: r.unsubscribed,
+                })),
+              },
               null,
               2
             ),
@@ -887,6 +1111,133 @@ export const handleToolCall = async (
           {
             type: "text",
             text: JSON.stringify(campaignReport, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_clicks":
+      const campaignClicks = await service.getCampaignClicks(args.campaign_id);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignClicks, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_opens":
+      const campaignOpens = await service.getCampaignOpens(args.campaign_id);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignOpens, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_unsubscribes":
+      const campaignUnsubscribes = await service.getCampaignUnsubscribes(
+        args.campaign_id
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignUnsubscribes, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_bounces":
+      const campaignBounces = await service.getCampaignBounces(
+        args.campaign_id
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignBounces, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_abuse_reports":
+      const campaignAbuseReports = await service.getCampaignAbuseReports(
+        args.campaign_id
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignAbuseReports, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_forwards":
+      const campaignForwards = await service.getCampaignForwards(
+        args.campaign_id
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignForwards, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_outbound_activity":
+      const campaignOutboundActivity =
+        await service.getCampaignOutboundActivity(args.campaign_id);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignOutboundActivity, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_email_activity":
+      const campaignEmailActivity = await service.getCampaignEmailActivity(
+        args.campaign_id
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignEmailActivity, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_subscriber_activity":
+      const campaignSubscriberActivity =
+        await service.getCampaignSubscriberActivity(
+          args.campaign_id,
+          args.subscriber_hash
+        );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignSubscriberActivity, null, 2),
+          },
+        ],
+      };
+
+    case "get_campaign_content":
+      const campaignContent = await service.getCampaignContent(
+        args.campaign_id
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(campaignContent, null, 2),
           },
         ],
       };
